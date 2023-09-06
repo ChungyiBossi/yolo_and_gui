@@ -9,7 +9,7 @@ object_detector = MPObjectDetectorWrapper()
 # canvas create
 def create_canvas_with_scroll(parent_object):
     # 將 Canvas 掛在 Frame 之下
-    canvas = tk.Canvas(parent_object, width=800, height=600, bg='#fff')
+    canvas = tk.Canvas(parent_object, width=700, height=400, bg='#fff')
     # 新增 Scroll bars
     scrollX = tk.Scrollbar(parent_object, orient='horizontal')
     scrollX.pack(side='bottom', fill='x')
@@ -33,36 +33,62 @@ def show_image(img, canvas):
     canvas.create_image(0, 0, anchor='nw', image=tk_img)   # 建立圖片
     canvas.tk_img = tk_img               # 修改屬性更新畫面
 
-def openfile_and_process(raw_canvas, cooked_canvas):
+def openfile_and_process(raw_canvas, cooked_canvas, textbox):
+    # openfile
     img_path = filedialog.askopenfilename(filetypes=[('png', '*.png'),('jpg', '*.jpg'),('gif', '*.gif')])  # 指定開啟檔案格式
     img = Image.open(img_path)           # 依照圖片路徑取得圖片檔
     show_image(img, raw_canvas)
-    process_and_show(img, cooked_canvas)
-
-def process_and_show(raw_pillow_img, canvas):
-    numpy_img = np.array(raw_pillow_img)
+    # process
+    numpy_img = np.array(img)
     detection_result = object_detector.object_detect(numpy_img)
     annotated_image = object_detector.visualize(numpy_img, detection_result)
-    show_image(Image.fromarray(annotated_image), canvas)
+    show_image(Image.fromarray(annotated_image), cooked_canvas)
+    # print result
+    # 整理辨識結果到text box
+    results = list()
+    for result in detection_result.detections:
+        category = result.categories[0]
+        category_name = category.category_name
+        probability = round(category.score, 2)
+        result_text = category_name + ' (' + str(probability) + ')'
+        results.append(result_text)
+    result_for_text_box = "\n".join(results)
+    textbox.delete(1.0,'end')
+    textbox.insert(tk.END, result_for_text_box)
 
 
 if __name__ == '__main__':
-
     root = tk.Tk()
     root.title('Process Image')
     root.geometry('1600x900')
 
-    button = tk.Button(root, text='Open Image and Process', command=lambda:openfile_and_process(raw_canvas, cooked_canvas))
-    button.pack()
-
-    # 創造兩個子視窗 raw/cooked image_frame
-    raw_image_frame = tk.Frame(root, width=800, height=800)
-    raw_image_frame.pack(side='left')
-    cooked_image_frame = tk.Frame(root, width=800, height=800)
-    cooked_image_frame.pack(side='right')
-
+    # 創造兩個子視窗 raw/cooked image_frame, 用left frame 包起來
+    left_frame = tk.Frame(root)
+    left_frame.pack(side='left')
+    raw_image_frame = tk.Frame(left_frame, width=800, height=450)
+    raw_image_frame.pack(padx=10, pady=10)
+    cooked_image_frame = tk.Frame(left_frame, width=800, height=450)
+    cooked_image_frame.pack(padx=10, pady=10)
     # 掛上畫布
     raw_canvas = create_canvas_with_scroll(raw_image_frame)
     cooked_canvas = create_canvas_with_scroll(cooked_image_frame)
+    
+    right_frame = tk.Frame(root)
+    right_frame.pack(side='right')
+    # 創造一個顯示結果的文字框, 包在right frame 之下
+    result_text = tk.Text(right_frame, width=800, font=('Arial',20,'bold'),)
+    result_text.insert(tk.END, "這裡是空白的")
+    result_text.pack(padx=10, pady=10, anchor='nw')
+    # result_text.pack(padx=10, pady=10)
+    # 上傳圖檔按鈕, 包在 right frame
+    button = tk.Button(
+        right_frame, 
+        text='Open Image and Process', 
+        font=('Arial',15,'bold'),
+        command=lambda :openfile_and_process(raw_canvas, cooked_canvas, result_text)
+    )
+    button.pack(padx=10, pady=10, side='left')
+    
+    
 
     root.mainloop()
