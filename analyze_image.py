@@ -23,7 +23,6 @@ def create_canvas_with_scroll(parent_object):
     canvas.pack(side='top')
     return canvas
 
-
 # image process
 def show_image(img, canvas):
     w, h = img.size                      # 取得圖片長寬
@@ -63,7 +62,11 @@ def download_processed_image(cooked_canvas):
     # imgtk is an ImageTk.PhotoImage object
     img_tk = cooked_canvas.tk_img
     img = ImageTk.getimage(img_tk)
-    img_save_path = filedialog.asksaveasfilename(filetypes=[('png', '*.png'),('jpg', '*.jpg'),('gif', '*.gif')])
+    img_save_path = filedialog.asksaveasfilename(
+        filetypes=[('png', '*.png'),('jpg', '*.jpg'),('gif', '*.gif')],
+        initialfile='result',
+        defaultextension='.png'
+    )
     img.save(img_save_path)
 
 if __name__ == '__main__':
@@ -86,9 +89,8 @@ if __name__ == '__main__':
     right_frame.pack(side='right')
     # 創造一個顯示結果的文字框, 包在right frame 之下
     result_text = tk.Text(right_frame, width=800, font=('Arial',20,'bold'),)
-    result_text.insert(tk.END, "這裡是空白的")
+    result_text.delete(1.0,'end')
     result_text.pack(padx=10, pady=10)
-    # result_text.pack(padx=10, pady=10)
     # 上傳圖檔按鈕, 包在 right frame
     button = tk.Button(
         right_frame, 
@@ -97,7 +99,6 @@ if __name__ == '__main__':
         command=lambda :openfile_and_process(raw_canvas, cooked_canvas, result_text)
     )
     button.pack(padx=10, pady=5, fill='x')
-
     # 下載圖檔按鈕, 包在 right frame
     button = tk.Button(
         right_frame, 

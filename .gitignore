@@ -1,0 +1,3 @@
+./yolo_and_gui_env/*
+*.pt
+./yolov7
